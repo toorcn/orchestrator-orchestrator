@@ -8,6 +8,8 @@
 - Config-driven default target selection
 - Streaming output passthrough
 - Minimal error handling for missing config/CLI
+- Config discovery order and schema defined
+- Simple multi-line prompt handling
 
 **Non-Goals (v1)**
 - Merging upstream codebases
@@ -23,19 +25,24 @@ A single `orchestrate` CLI accepts a prompt, loads a simple local config file, s
 ## Components
 1. **CLI Entry Point**
    - Command: `orchestrate "<prompt>"`
-   - Flags: `--target <name>` (optional override)
+   - Flags: `--target <name>` (optional override), `--list-targets`
+   - Multi-line prompt: allow `--prompt-file <path>` as optional input
 
 2. **Config Loader**
-   - Reads a local config file (JSON or YAML)
+   - Config file: `~/.orchestrate/config.json` (JSON only in v1)
+   - Discovery: `--config <path>` > `ORCHESTRATE_CONFIG` env > default path
    - Minimal required fields: `default_target`, `targets` map
+   - Schema (v1):
+     - `default_target`: string
+     - `targets`: map of name → { `command`: string, `args`: optional string[] }
 
 3. **Target Runner**
-   - Maps target name to a local CLI command
-   - Spawns process with prompt argument
+   - Maps target name to a local CLI command + args
+   - Spawns process with prompt argument (or stdin when `--prompt-file` used)
    - Streams output to user
 
 4. **Error Handling**
-   - Missing config → print setup instructions
+   - Missing config → print setup instructions + example file
    - Unknown target → list available targets
    - Missing CLI binary → print install hint
    - Target failure → pass through exit code
@@ -45,11 +52,10 @@ User prompt → CLI parses args → loads config → selects target → spawns t
 
 ## Testing Strategy
 - Unit tests: config parsing, target selection, error cases
-- Integration test: stubbed process execution and output streaming
+- Integration tests: CLI-level golden tests for `--list-targets`, missing config, and prompt routing with stubbed process execution
 
 ## Open Questions
-- Config format preference (JSON vs YAML)
-- Target CLI invocation specifics for each orchestrator
+- Target CLI invocation specifics for each orchestrator (prompt arg vs stdin)
 
 ## Example Config (Draft)
 ```
