@@ -14,6 +14,19 @@ export async function main(argv) {
   const configPath = configIdx >= 0 ? args[configIdx + 1] : null;
   const promptFileIdx = args.indexOf("--prompt-file");
   const promptFile = promptFileIdx >= 0 ? args[promptFileIdx + 1] : null;
+
+  if (targetIdx >= 0 && !target) {
+    console.error("Missing value for --target");
+    return 1;
+  }
+  if (configIdx >= 0 && !configPath) {
+    console.error("Missing value for --config");
+    return 1;
+  }
+  if (promptFileIdx >= 0 && !promptFile) {
+    console.error("Missing value for --prompt-file");
+    return 1;
+  }
   const nonFlagArgs = args.filter(
     (a, i) =>
       !a.startsWith("--") &&
