@@ -63,6 +63,21 @@ test("rejects when default not in selected", async () => {
   );
 });
 
+test("rejects when selected target not detected", async () => {
+  await assert.rejects(() =>
+    runSetupFlow({
+      detected: [{ name: "opencode", command: "oh-my-opencode" }],
+      prompt: async () => ({
+        targets: ["unknown"],
+        defaultTarget: "unknown",
+        configPath: "/tmp/config.json",
+        confirmPath: true,
+        confirmWrite: true,
+      }),
+    }),
+  );
+});
+
 test("requires confirm path before write", async () => {
   await assert.rejects(() =>
     runSetupFlow({

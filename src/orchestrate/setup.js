@@ -53,6 +53,7 @@ export async function runSetupFlow({ detected, prompt }) {
   const targets = {};
   for (const name of res.targets) {
     const match = detected.find((d) => d.name === name);
+    if (!match) throw new Error("Invalid selection");
     targets[name] = { command: match.command };
   }
 
