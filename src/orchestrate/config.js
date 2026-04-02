@@ -9,21 +9,27 @@ export function resolveConfigPath({ configPath, env = process.env } = {}) {
   return DEFAULT_PATH;
 }
 
+export function isConfigValid(cfg) {
+  if (!cfg || typeof cfg !== "object") return false;
+  if (typeof cfg.default_target !== "string") return false;
+  if (!cfg.targets || typeof cfg.targets !== "object") return false;
+  const names = Object.keys(cfg.targets);
+  if (names.length === 0) return false;
+  for (const name of names) {
+    const t = cfg.targets[name];
+    if (!t || typeof t.command !== "string" || t.command.length === 0) return false;
+    if (t.args && (!Array.isArray(t.args) || t.args.some((a) => typeof a !== "string"))) {
+      return false;
+    }
+  }
+  if (!cfg.targets[cfg.default_target]) return false;
+  return true;
+}
+
 export function loadConfig({ configPath } = {}) {
   const filePath = resolveConfigPath({ configPath });
   const raw = fs.readFileSync(filePath, "utf8");
   const cfg = JSON.parse(raw);
-  if (!cfg || typeof cfg !== "object") throw new Error("Invalid config");
-  if (typeof cfg.default_target !== "string") throw new Error("Invalid config");
-  if (!cfg.targets || typeof cfg.targets !== "object") throw new Error("Invalid config");
-  const targetNames = Object.keys(cfg.targets);
-  if (targetNames.length === 0) throw new Error("Invalid config");
-  for (const name of targetNames) {
-    const t = cfg.targets[name];
-    if (!t || typeof t.command !== "string" || t.command.length === 0) {
-      throw new Error("Invalid config");
-    }
-  }
-  if (!cfg.targets[cfg.default_target]) throw new Error("Invalid config");
+  if (!isConfigValid(cfg)) throw new Error("Invalid config");
   return cfg;
 }
