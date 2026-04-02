@@ -28,6 +28,15 @@ orch2 "your prompt here"
 - Node.js 20+ (tested with Node 22)
 - Target CLIs installed locally (e.g., `oh-my-opencode`, `oh-my-codex`, `free-code`)
 
+## Build from source
+
+```bash
+git clone https://github.com/toorcn/orchestrator-orchestrator.git
+cd orchestrator-orchestrator
+# no build step required
+orch2 "your prompt here"
+```
+
 ## Usage
 
 ### One‑shot prompt
