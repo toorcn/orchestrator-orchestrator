@@ -1,3 +1,4 @@
-export async function main() {
+export async function main(argv) {
+  void argv;
   return 0;
 }
