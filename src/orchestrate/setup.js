@@ -38,6 +38,15 @@ export async function setup({ interactive, configPath } = {}) {
   }
 
   const rl = createInterface({ input, output });
+  const ask = (q) => rl.question(q);
+  const askYesNo = async (q) => {
+    while (true) {
+      const ans = (await ask(q)).trim().toLowerCase();
+      if (ans === "q") return null;
+      if (ans === "y" || ans === "n") return ans === "y";
+    }
+  };
+
   try {
     const detected = detectTargets();
 
@@ -48,52 +57,70 @@ export async function setup({ interactive, configPath } = {}) {
 
     if (!detected || detected.length === 0) {
       output.write("No supported CLIs detected on PATH.\n");
-      customName = (await rl.question("Enter a target name (or 'q' to cancel): ")).trim();
-      if (customName.toLowerCase() === "q") return 1;
-      customCommand = (await rl.question("Enter command for this target (or 'q' to cancel): ")).trim();
-      if (customCommand.toLowerCase() === "q") return 1;
-      if (!customName || !customCommand) return 1;
-      selected = [customName];
-      defaultTarget = customName;
+      while (true) {
+        const name = (await ask("Enter a target name (or 'q' to cancel): ")).trim();
+        if (name.toLowerCase() === "q") return 1;
+        if (!name) continue;
+        const cmd = (await ask("Enter command for this target (or 'q' to cancel): ")).trim();
+        if (cmd.toLowerCase() === "q") return 1;
+        if (!cmd) continue;
+        customName = name;
+        customCommand = cmd;
+        selected = [customName];
+        defaultTarget = customName;
+        break;
+      }
     } else {
       output.write("Select targets to include (comma-separated numbers, or 'q' to cancel):\n");
       detected.forEach((t, i) => output.write(`  ${i + 1}) ${t.name} (${t.command})\n`));
-      const raw = (await rl.question("Targets: ")).trim();
-      if (raw.toLowerCase() === "q") return 1;
-      const indices = raw
-        .split(",")
-        .map((s) => parseInt(s.trim(), 10) - 1)
-        .filter((n) => Number.isInteger(n) && n >= 0 && n < detected.length);
-      selected = Array.from(new Set(indices.map((i) => detected[i].name)));
-      if (selected.length === 0) return 1;
+      while (true) {
+        const raw = (await ask("Targets: ")).trim();
+        if (raw.toLowerCase() === "q") return 1;
+        const indices = raw
+          .split(",")
+          .map((s) => parseInt(s.trim(), 10) - 1)
+          .filter((n) => Number.isInteger(n) && n >= 0 && n < detected.length);
+        selected = Array.from(new Set(indices.map((i) => detected[i].name)));
+        if (selected.length > 0) break;
+      }
 
       if (selected.length === 1) {
         defaultTarget = selected[0];
       } else {
         output.write("Choose a default target (or 'q' to cancel):\n");
         selected.forEach((name, i) => output.write(`  ${i + 1}) ${name}\n`));
-        const rawDefault = (await rl.question("Default: ")).trim();
-        if (rawDefault.toLowerCase() === "q") return 1;
-        const d = parseInt(rawDefault, 10) - 1;
-        if (!Number.isInteger(d) || d < 0 || d >= selected.length) return 1;
-        defaultTarget = selected[d];
+        while (true) {
+          const rawDefault = (await ask("Default: ")).trim();
+          if (rawDefault.toLowerCase() === "q") return 1;
+          const d = parseInt(rawDefault, 10) - 1;
+          if (Number.isInteger(d) && d >= 0 && d < selected.length) {
+            defaultTarget = selected[d];
+            break;
+          }
+        }
       }
     }
 
-    const pathChoice = (configPath ?? resolveConfigPath({}));
-    output.write(`Config path: ${pathChoice}\n`);
-    const confirmPath = (await rl.question("Use this path? (y/n): ")).trim().toLowerCase();
-    if (confirmPath !== "y") return 1;
+    let pathChoice = configPath ?? resolveConfigPath({});
+    while (true) {
+      output.write(`Config path: ${pathChoice}\n`);
+      const ok = await askYesNo("Use this path? (y/n, q to cancel): ");
+      if (ok === null) return 1;
+      if (ok) break;
+      const alt = (await ask("Enter new path (or 'q' to cancel): ")).trim();
+      if (alt.toLowerCase() === "q") return 1;
+      if (alt) pathChoice = alt;
+    }
 
-    const confirmWrite = (await rl.question("Write config now? (y/n): ")).trim().toLowerCase();
-    if (confirmWrite !== "y") return 1;
+    const confirmWrite = await askYesNo("Write config now? (y/n, q to cancel): ");
+    if (confirmWrite !== true) return 1;
 
     const targets = {};
     if (customName) {
       const collision = detected.find((d) => d.name === customName);
       if (collision) {
-        const overwrite = (await rl.question("Name exists. Override? (y/n): ")).trim().toLowerCase();
-        if (overwrite !== "y") return 1;
+        const overwrite = await askYesNo("Name exists. Override? (y/n, q to cancel): ");
+        if (overwrite !== true) return 1;
       }
       targets[customName] = { command: customCommand };
     } else {
@@ -108,10 +135,9 @@ export async function setup({ interactive, configPath } = {}) {
       try {
         writeConfig(pathChoice, { default_target: defaultTarget, targets });
         break;
-      } catch (err) {
-        output.write("Write failed. Retry? (y/n): ");
-        const retry = (await rl.question("")).trim().toLowerCase();
-        if (retry !== "y") return 1;
+      } catch {
+        const retry = await askYesNo("Write failed. Retry? (y/n, q to cancel): ");
+        if (retry !== true) return 1;
       }
     }
 
