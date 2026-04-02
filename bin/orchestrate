@@ -1,4 +1,6 @@
 #!/usr/bin/env node
 import { main } from "../src/orchestrate/index.js";
 
-main(process.argv);
+main(process.argv).then((code) => {
+  if (typeof code === "number") process.exit(code);
+});
