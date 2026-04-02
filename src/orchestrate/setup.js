@@ -16,7 +16,8 @@ export function detectTargets({ which } = {}) {
     which ||
     ((cmd) => {
       try {
-        execFileSync("which", [cmd], { stdio: "ignore" });
+        const bin = process.platform === "win32" ? "where" : "which";
+        execFileSync(bin, [cmd], { stdio: "ignore" });
         return cmd;
       } catch {
         return null;
@@ -64,6 +65,11 @@ export async function setup({ interactive, configPath } = {}) {
         const cmd = (await ask("Enter command for this target (or 'q' to cancel): ")).trim();
         if (cmd.toLowerCase() === "q") return 1;
         if (!cmd) continue;
+        const collision = KNOWN.find((d) => d.name === name);
+        if (collision) {
+          const overwrite = await askYesNo("Name exists. Override? (y/n, q to cancel): ");
+          if (overwrite !== true) return 1;
+        }
         customName = name;
         customCommand = cmd;
         selected = [customName];
