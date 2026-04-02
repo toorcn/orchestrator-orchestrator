@@ -123,7 +123,7 @@ export async function runRepl({
 
       const t = cfg.targets[activeTarget];
       const contextBundle = context.bundle();
-      const chosen = await routePrompt({ prompt: text, context: contextBundle, targets: cfg.targets, runTarget });
+      const chosen = await routePrompt({ prompt: text, context: contextBundle, targets: cfg.targets });
       const chosenTarget = cfg.targets[chosen] ?? t;
       const result = await runTarget({ command: chosenTarget.command, args: chosenTarget.args ?? [], prompt: text, interactive: true });
       history.push(text);

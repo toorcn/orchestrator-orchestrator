@@ -1,6 +1,7 @@
 import { isConfigValid, loadConfig, resolveConfigPath } from "./config.js";
 import { runTarget } from "./runner.js";
 import { setup as defaultSetup } from "./setup.js";
+import { login } from "./login.js";
 import { runRepl } from "./repl.js";
 
 const CONFIG_HINT = `Missing or invalid config. Create ~/.orchestrate/config.json with default_target and targets. Example:\n{\n  "default_target": "opencode",\n  "targets": {\n    "opencode": {"command": "oh-my-opencode"}\n  }\n}\n`;
@@ -28,6 +29,7 @@ export async function main(argv, { setup, configPath } = {}) {
   );
   const prompt = nonFlagArgs[0] || "";
   const isSetup = nonFlagArgs[0] === "setup";
+  const isLogin = nonFlagArgs[0] === "login";
   const finalConfigPath = resolveConfigPath({
     configPath: resolvedConfigPath,
   });
@@ -50,6 +52,9 @@ export async function main(argv, { setup, configPath } = {}) {
       configPath: finalConfigPath,
       interactive: process.stdin.isTTY,
     });
+  }
+  if (isLogin) {
+    return await login({ interactive: process.stdin.isTTY });
   }
 
   let cfg;

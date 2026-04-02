@@ -1,20 +1,29 @@
+import { readCredentials } from "./credentials.js";
+
 export async function routePrompt({
   prompt,
   context,
   targets,
-  runTarget,
 }) {
   const choices = Object.keys(targets);
-  const results = [];
+  const { openai_oauth_token } = readCredentials();
+  if (!openai_oauth_token) return choices[0];
 
-  for (const name of choices) {
-    const routerPrompt = `You are a routing assistant.\n\nTask: ${prompt}\n\nRecent context:\n${context.join("\n---\n")}\n\nChoose if this target (${name}) is the best fit. Reply with: \"yes\" or \"no\" only.`;
-    const t = targets[name];
-    const result = await runTarget({ command: t.command, args: t.args ?? [], prompt: routerPrompt, interactive: false });
-    const yes = (result.output || "").toLowerCase().includes("yes");
-    results.push({ name, ok: !result.error, exitCode: result.exitCode, yes });
-  }
+  const routerPrompt = `You are a routing assistant.\n\nTask: ${prompt}\n\nRecent context:\n${context.join("\n---\n")}\n\nAvailable targets: ${choices.join(", ")}\n\nPick the best target name from the list. Reply with the name only.`;
 
-  const winner = results.find((r) => r.ok && r.exitCode === 0 && r.yes);
-  return winner ? winner.name : choices[0];
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openai_oauth_token}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      input: routerPrompt,
+    }),
+  });
+  if (!res.ok) return choices[0];
+  const data = await res.json();
+  const text = (data.output_text || data.output?.[0]?.content?.[0]?.text || "").trim();
+  return choices.includes(text) ? text : choices[0];
 }
