@@ -47,7 +47,7 @@ export async function runRepl({
     if (typeof cfg === "number") return cfg;
     activeTarget = cfg.default_target;
 
-    output.write("\u001b[36morch2 REPL\u001b[0m. Type /help for commands.\n\n");
+    output.write("\u001b[36morch2 REPL\u001b[0m \u001b[90m(opencode-style)\u001b[0m. Type /help for commands.\n\n");
 
     while (true) {
       const buffer = [];

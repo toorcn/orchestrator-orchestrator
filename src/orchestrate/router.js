@@ -1,13 +1,11 @@
-import { readCredentials } from "./credentials.js";
-
 export async function routePrompt({
   prompt,
   context,
   targets,
 }) {
   const choices = Object.keys(targets);
-  const { openai_oauth_token } = readCredentials();
-  if (!openai_oauth_token) return choices[0];
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return choices[0];
 
   const routerPrompt = `You are a routing assistant.\n\nTask: ${prompt}\n\nRecent context:\n${context.join("\n---\n")}\n\nAvailable targets: ${choices.join(", ")}\n\nPick the best target name from the list. Reply with the name only.`;
 
@@ -15,7 +13,7 @@ export async function routePrompt({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${openai_oauth_token}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
