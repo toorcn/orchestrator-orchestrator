@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { runSetupFlow } from "../../src/orchestrate/setup.js";
+import { main } from "../../src/orchestrate/index.js";
 
 test("runSetupFlow returns config from selections", async () => {
   const cfg = await runSetupFlow({
@@ -106,4 +107,26 @@ test("custom command flow when none detected", async () => {
     }),
   });
   assert.equal(cfg.default_target, "custom");
+});
+
+test("auto-setup runs when config invalid", async () => {
+  const code = await main(["node", "bin/orchestrate"], {
+    configPath: "/tmp/does-not-exist.json",
+    setup: async () => 0,
+  });
+  assert.equal(code, 0);
+});
+
+test("setup exits in non-interactive", async () => {
+  const code = await main(["node", "bin/orchestrate", "setup"], {
+    setup: async () => 2,
+  });
+  assert.equal(code, 2);
+});
+
+test("setup exits cleanly on cancel", async () => {
+  const code = await main(["node", "bin/orchestrate", "setup"], {
+    setup: async () => 1,
+  });
+  assert.equal(code, 1);
 });
