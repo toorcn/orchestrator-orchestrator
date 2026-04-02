@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { main } from "../src/orchestrate/index.js";
 
-main(process.argv).then((code) => {
-  if (typeof code === "number") process.exit(code);
-});
+main(process.argv)
+  .then((code) => {
+    if (typeof code === "number") process.exit(code);
+  })
+  .catch((err) => {
+    console.error(err?.message ?? "Unexpected error");
+    process.exit(1);
+  });

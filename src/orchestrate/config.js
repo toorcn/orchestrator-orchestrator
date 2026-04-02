@@ -13,6 +13,16 @@ export function loadConfig({ configPath } = {}) {
   const filePath = resolveConfigPath({ configPath });
   const raw = fs.readFileSync(filePath, "utf8");
   const cfg = JSON.parse(raw);
-  if (!cfg.default_target || !cfg.targets) throw new Error("Invalid config");
+  if (!cfg || typeof cfg !== "object") throw new Error("Invalid config");
+  if (typeof cfg.default_target !== "string") throw new Error("Invalid config");
+  if (!cfg.targets || typeof cfg.targets !== "object") throw new Error("Invalid config");
+  const targetNames = Object.keys(cfg.targets);
+  if (targetNames.length === 0) throw new Error("Invalid config");
+  for (const name of targetNames) {
+    const t = cfg.targets[name];
+    if (!t || typeof t.command !== "string" || t.command.length === 0) {
+      throw new Error("Invalid config");
+    }
+  }
   return cfg;
 }

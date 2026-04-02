@@ -3,10 +3,25 @@ import fs from "node:fs";
 
 export function runTarget({ command, args = [], prompt, stdinPath }) {
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+
     const finalArgs = stdinPath ? args : [...args, prompt];
     const child = spawn(command, finalArgs, { stdio: ["pipe", "inherit", "inherit"] });
-    if (stdinPath) fs.createReadStream(stdinPath).pipe(child.stdin);
-    child.on("close", (code) => resolve({ exitCode: code ?? 1 }));
-    child.on("error", () => resolve({ exitCode: 1, error: "spawn-failed" }));
+    if (stdinPath) {
+      const stream = fs.createReadStream(stdinPath);
+      stream.on("error", () => finish({ exitCode: 1, error: "stdin-failed" }));
+      child.stdin.on("error", (err) => {
+        if (err?.code === "EPIPE") return;
+        finish({ exitCode: 1, error: "stdin-failed" });
+      });
+      stream.pipe(child.stdin);
+    }
+    child.on("close", (code) => finish({ exitCode: code ?? 0 }));
+    child.on("error", () => finish({ exitCode: 1, error: "spawn-failed" }));
   });
 }
