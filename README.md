@@ -4,9 +4,9 @@ A single local CLI wrapper that routes prompts to installed orchestrator CLIs (o
 
 ## Quick Install
 
-This repo ships a local CLI script you can run via Node. To use `orch2`, you need two things:
+This repo ships a local CLI script you can run via Node. To use `orch2`, you need:
 1) a symlink to the CLI
-2) a config file
+2) a first-run interactive setup
 
 ### Short command name (orch2)
 
@@ -14,18 +14,10 @@ This repo ships a local CLI script you can run via Node. To use `orch2`, you nee
 sudo ln -s "$(pwd)/bin/orchestrate" /usr/local/bin/orch2
 ```
 
-### Minimal config
+### First run setup (interactive)
 
 ```bash
-mkdir -p ~/.orchestrate
-cat <<'EOF' > ~/.orchestrate/config.json
-{
-  "default_target": "opencode",
-  "targets": {
-    "opencode": {"command": "oh-my-opencode"}
-  }
-}
-EOF
+orch2 setup
 ```
 
 Then use:
@@ -44,15 +36,7 @@ orch2 "your prompt here"
 git clone https://github.com/toorcn/orchestrator-orchestrator.git
 cd orchestrator-orchestrator
 sudo ln -s "$(pwd)/bin/orchestrate" /usr/local/bin/orch2
-mkdir -p ~/.orchestrate
-cat <<'EOF' > ~/.orchestrate/config.json
-{
-  "default_target": "opencode",
-  "targets": {
-    "opencode": {"command": "oh-my-opencode"}
-  }
-}
-EOF
+orch2 setup
 orch2 "your prompt here"
 ```
 
@@ -80,7 +64,7 @@ orch2 --list-targets
 
 ## Configuration
 
-Create `~/.orchestrate/config.json`:
+`orch2` will guide you through an interactive setup on first run (`orch2 setup`) and write `~/.orchestrate/config.json`. You can still edit it manually:
 
 ```json
 {
