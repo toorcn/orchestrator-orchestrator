@@ -1,5 +1,7 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { createContextManager } from "./context.js";
+import { routePrompt } from "./router.js";
 
 const HELP = `Commands:
   /help            Show this help
@@ -24,6 +26,7 @@ export async function runRepl({
 }) {
   const rl = _mockRl ?? createInterface({ input, output });
   const history = [];
+  const context = createContextManager({ historySize: 10 });
   let activeTarget = null;
 
   const ensureConfig = async () => {
@@ -119,8 +122,12 @@ export async function runRepl({
       }
 
       const t = cfg.targets[activeTarget];
-      const result = await runTarget({ command: t.command, args: t.args ?? [], prompt: text, interactive: true });
+      const contextBundle = context.bundle();
+      const chosen = await routePrompt({ prompt: text, context: contextBundle, targets: cfg.targets, runTarget });
+      const chosenTarget = cfg.targets[chosen] ?? t;
+      const result = await runTarget({ command: chosenTarget.command, args: chosenTarget.args ?? [], prompt: text, interactive: true });
       history.push(text);
+      context.addTurn(text);
       if (result.error === "spawn-failed") return 1;
     }
   } finally {
