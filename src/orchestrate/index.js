@@ -1,6 +1,7 @@
 import { isConfigValid, loadConfig, resolveConfigPath } from "./config.js";
 import { runTarget } from "./runner.js";
 import { setup as defaultSetup } from "./setup.js";
+import { runRepl } from "./repl.js";
 
 const CONFIG_HINT = `Missing or invalid config. Create ~/.orchestrate/config.json with default_target and targets. Example:\n{\n  "default_target": "opencode",\n  "targets": {\n    "opencode": {"command": "oh-my-opencode"}\n  }\n}\n`;
 const MISSING_BINARY_HINT = (command) =>
@@ -10,6 +11,7 @@ export async function main(argv, { setup, configPath } = {}) {
   const setupFn = setup ?? defaultSetup;
   const args = argv.slice(2);
   const list = args.includes("--list-targets");
+  const oneShot = args.includes("--one-shot");
   const targetIdx = args.indexOf("--target");
   const target = targetIdx >= 0 ? args[targetIdx + 1] : null;
   const configIdx = args.indexOf("--config");
@@ -78,6 +80,18 @@ export async function main(argv, { setup, configPath } = {}) {
   if (list) {
     console.log(Object.keys(cfg.targets).join("\n"));
     return 0;
+  }
+
+  if (!oneShot && !prompt && !promptFile) {
+    return await runRepl({
+      setup: setupFn,
+      loadConfig,
+      isConfigValid,
+      resolveConfigPath,
+      runTarget,
+      configPath: finalConfigPath,
+      listTargets: (c) => Object.keys(c.targets),
+    });
   }
 
   const selected = target ?? cfg.default_target;
