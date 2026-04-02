@@ -17,6 +17,11 @@
 - Rich UI or TUI
 - Advanced routing heuristics
 
+**Scope (v2)**
+- Per-target adapters for full CLI capabilities (modes/flags/env)
+- Pass-through flags and env overrides per target
+- Verified prompt-delivery strategy per target (arg vs stdin vs flag)
+
 ---
 
 ## Architecture
@@ -55,7 +60,12 @@ User prompt → CLI parses args → loads config → selects target → spawns t
 - Integration tests: CLI-level golden tests for `--list-targets`, missing config, and prompt routing with stubbed process execution
 
 ## Open Questions
-- Target CLI invocation specifics for each orchestrator (prompt arg vs stdin)
+- None for v1. v2 will document full CLI surface for each target.
+
+## v2 Adapter Notes (Draft)
+- **oh-my-openagent (oh-my-opencode)**: CLI-centric flows via `opencode` and `ultrawork`/`ulw`. Likely requires passing explicit subcommands and may depend on repo-local config files. Adapter should allow pass-through subcommands and environment variables.
+- **oh-my-codex**: wrapper commands like `omx` with modes (`setup`, `doctor`, `team`, `hud`) and role commands inside the session. Adapter should map `--mode`/`--command` to appropriate `omx` invocation and pass prompt as quoted arg when required.
+- **free-code (claude code clone)**: interactive REPL default; one-shot mode uses `-p` for prompt, `--model` for model selection, and relies on env vars for provider selection. Adapter should default to one-shot `-p` with env overrides.
 
 ## Example Config (Draft)
 ```
