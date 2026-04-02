@@ -119,7 +119,7 @@ export async function runRepl({
       }
 
       const t = cfg.targets[activeTarget];
-      const result = await runTarget({ command: t.command, args: t.args ?? [], prompt: text });
+      const result = await runTarget({ command: t.command, args: t.args ?? [], prompt: text, interactive: true });
       history.push(text);
       if (result.error === "spawn-failed") return 1;
     }

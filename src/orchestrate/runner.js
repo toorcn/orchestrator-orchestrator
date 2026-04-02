@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 
-export function runTarget({ command, args = [], prompt, stdinPath }) {
+export function runTarget({ command, args = [], prompt, stdinPath, interactive }) {
   return new Promise((resolve) => {
     let settled = false;
     const finish = (result) => {
@@ -11,7 +11,8 @@ export function runTarget({ command, args = [], prompt, stdinPath }) {
     };
 
     const finalArgs = stdinPath ? args : [...args, prompt];
-    const child = spawn(command, finalArgs, { stdio: ["pipe", "inherit", "inherit"] });
+    const stdio = interactive && !stdinPath ? "inherit" : ["pipe", "inherit", "inherit"];
+    const child = spawn(command, finalArgs, { stdio });
     if (stdinPath) {
       const stream = fs.createReadStream(stdinPath);
       stream.on("error", () => finish({ exitCode: 1, error: "stdin-failed" }));
