@@ -27,9 +27,10 @@ Add a `setup` subcommand and a shared setup flow that can be invoked either expl
 2. **Target Discovery**
    - Checks for known CLIs on PATH (e.g., `oh-my-opencode`, `oh-my-codex`, `free-code`)
 
-3. **Prompt Flow**
-   - Multi-select: which targets to include (must select at least one)
-   - Single-select: default target (must be one of selected)
+3. **Prompt Flow (Claude Code‑style)**
+   - Show detected targets as a checklist (multi-select; must pick at least one)
+   - Choose default target (single-select from chosen)
+   - Confirm config path before write
    - If none detected, prompt user to enter at least one custom command (name + command)
 
 4. **Config Writer**
@@ -61,7 +62,7 @@ Add a `setup` subcommand and a shared setup flow that can be invoked either expl
 - `default_target` not present in `targets`
 
 ## Data Flow
-User runs `orch2` → config missing/invalid → setup flow → detect targets → prompt user → write config → proceed.
+User runs `orch2` → config missing/invalid → setup flow → detect targets → show checklist + multi-select → choose default → confirm config path → write config → success + next steps → proceed.
 User runs `orch2 setup` → setup flow directly.
 
 ## Error Handling
