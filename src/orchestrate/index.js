@@ -1,11 +1,13 @@
 import { isConfigValid, loadConfig, resolveConfigPath } from "./config.js";
 import { runTarget } from "./runner.js";
+import { setup as defaultSetup } from "./setup.js";
 
 const CONFIG_HINT = `Missing or invalid config. Create ~/.orchestrate/config.json with default_target and targets. Example:\n{\n  "default_target": "opencode",\n  "targets": {\n    "opencode": {"command": "oh-my-opencode"}\n  }\n}\n`;
 const MISSING_BINARY_HINT = (command) =>
   `Missing CLI binary: ${command}. Install it or update your config.`;
 
 export async function main(argv, { setup, configPath } = {}) {
+  const setupFn = setup ?? defaultSetup;
   const args = argv.slice(2);
   const list = args.includes("--list-targets");
   const targetIdx = args.indexOf("--target");
@@ -41,8 +43,8 @@ export async function main(argv, { setup, configPath } = {}) {
     return 1;
   }
 
-  if (isSetup && setup) {
-    return await setup({
+  if (isSetup) {
+    return await setupFn({
       configPath: finalConfigPath,
       interactive: process.stdin.isTTY,
     });
@@ -52,8 +54,8 @@ export async function main(argv, { setup, configPath } = {}) {
   try {
     cfg = loadConfig({ configPath: finalConfigPath });
   } catch (err) {
-    if (setup) {
-      return await setup({
+    if (setupFn) {
+      return await setupFn({
         configPath: finalConfigPath,
         interactive: process.stdin.isTTY,
       });
@@ -63,8 +65,8 @@ export async function main(argv, { setup, configPath } = {}) {
   }
 
   if (!isConfigValid(cfg)) {
-    if (setup) {
-      return await setup({
+    if (setupFn) {
+      return await setupFn({
         configPath: finalConfigPath,
         interactive: process.stdin.isTTY,
       });

@@ -28,6 +28,14 @@ export function writeConfig(filePath, cfg) {
   fs.writeFileSync(filePath, `${JSON.stringify(cfg, null, 2)}\n`);
 }
 
+export async function setup({ interactive }) {
+  if (!interactive) {
+    console.error("Interactive setup requires a TTY");
+    return 2;
+  }
+  return 0;
+}
+
 export async function runSetupFlow({ detected, prompt }) {
   if (!prompt) throw new Error("Prompt required");
 
