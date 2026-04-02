@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const KNOWN = [
   { name: "opencode", command: "oh-my-opencode" },
@@ -13,7 +13,7 @@ export function detectTargets({ which } = {}) {
     which ||
     ((cmd) => {
       try {
-        execSync(`command -v ${cmd}`, { stdio: "ignore" });
+        execFileSync("which", [cmd], { stdio: "ignore" });
         return cmd;
       } catch {
         return null;
@@ -25,5 +25,5 @@ export function detectTargets({ which } = {}) {
 
 export function writeConfig(filePath, cfg) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(cfg, null, 2));
+  fs.writeFileSync(filePath, `${JSON.stringify(cfg, null, 2)}\n`);
 }

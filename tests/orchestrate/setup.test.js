@@ -52,8 +52,9 @@ test("writeConfig writes file", () => {
 });
 
 test("writeConfig throws on write failure", () => {
+  const forbidden = process.platform === "win32" ? "Z:/forbidden.json" : "/root/forbidden.json";
   assert.throws(() =>
-    writeConfig("/root/forbidden.json", {
+    writeConfig(forbidden, {
       default_target: "opencode",
       targets: { opencode: { command: "oh-my-opencode" } },
     }),
