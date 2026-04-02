@@ -51,6 +51,10 @@ export async function runRepl({
       while (true) {
         const line = await rl.question("> ");
         if (line.trim() === "") break;
+        if (buffer.length === 0 && line.trim().startsWith("/")) {
+          buffer.push(line.trim());
+          break;
+        }
         buffer.push(line);
       }
       if (buffer.length === 0) continue;
