@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+import { resolveConfigPath } from "./config.js";
 
 const KNOWN = [
   { name: "opencode", command: "oh-my-opencode" },
@@ -28,12 +31,81 @@ export function writeConfig(filePath, cfg) {
   fs.writeFileSync(filePath, `${JSON.stringify(cfg, null, 2)}\n`);
 }
 
-export async function setup({ interactive }) {
+export async function setup({ interactive, configPath } = {}) {
   if (!interactive) {
     console.error("Interactive setup requires a TTY");
     return 2;
   }
-  return 0;
+
+  const rl = createInterface({ input, output });
+  try {
+    const detected = detectTargets();
+
+    let selected = [];
+    let defaultTarget = null;
+    let customName = null;
+    let customCommand = null;
+
+    if (!detected || detected.length === 0) {
+      output.write("No supported CLIs detected on PATH.\n");
+      customName = (await rl.question("Enter a target name: ")).trim();
+      customCommand = (await rl.question("Enter command for this target: ")).trim();
+      if (!customName || !customCommand) return 1;
+      selected = [customName];
+      defaultTarget = customName;
+    } else {
+      output.write("Select targets to include (comma-separated numbers):\n");
+      detected.forEach((t, i) => output.write(`  ${i + 1}) ${t.name} (${t.command})\n`));
+      const raw = (await rl.question("Targets: ")).trim();
+      const indices = raw
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10) - 1)
+        .filter((n) => Number.isInteger(n) && n >= 0 && n < detected.length);
+      selected = Array.from(new Set(indices.map((i) => detected[i].name)));
+      if (selected.length === 0) return 1;
+
+      if (selected.length === 1) {
+        defaultTarget = selected[0];
+      } else {
+        output.write("Choose a default target:\n");
+        selected.forEach((name, i) => output.write(`  ${i + 1}) ${name}\n`));
+        const d = parseInt((await rl.question("Default: ")).trim(), 10) - 1;
+        if (!Number.isInteger(d) || d < 0 || d >= selected.length) return 1;
+        defaultTarget = selected[d];
+      }
+    }
+
+    const pathChoice = (configPath ?? resolveConfigPath({}));
+    output.write(`Config path: ${pathChoice}\n`);
+    const confirmPath = (await rl.question("Use this path? (y/n): ")).trim().toLowerCase();
+    if (confirmPath !== "y") return 1;
+
+    const confirmWrite = (await rl.question("Write config now? (y/n): ")).trim().toLowerCase();
+    if (confirmWrite !== "y") return 1;
+
+    const targets = {};
+    if (customName) {
+      targets[customName] = { command: customCommand };
+    } else {
+      for (const name of selected) {
+        const match = detected.find((d) => d.name === name);
+        if (!match) return 1;
+        targets[name] = { command: match.command };
+      }
+    }
+
+    try {
+      writeConfig(pathChoice, { default_target: defaultTarget, targets });
+    } catch (err) {
+      output.write("Write failed. Try again.\n");
+      return 1;
+    }
+
+    output.write("Setup complete. Try: orch2 --list-targets\n");
+    return 0;
+  } finally {
+    rl.close();
+  }
 }
 
 export async function runSetupFlow({ detected, prompt }) {
