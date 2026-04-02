@@ -7,19 +7,15 @@ A single local CLI wrapper that routes prompts to installed orchestrator CLIs (o
 This repo ships a local CLI script you can run via Node:
 
 ```bash
-node bin/orchestrate "your prompt here"
+orch2 "your prompt here"
 ```
 
 ### Short command name (orch2)
 
-Create a small wrapper so you can run `orch2` instead of `node bin/orchestrate`:
+Create a symlink so you can run `orch2` directly:
 
 ```bash
-cat <<'EOF' > /usr/local/bin/orch2
-#!/usr/bin/env bash
-node "$(pwd)/bin/orchestrate" "$@"
-EOF
-chmod +x /usr/local/bin/orch2
+sudo ln -s "$(pwd)/bin/orchestrate" /usr/local/bin/orch2
 ```
 
 Then use:
@@ -36,22 +32,22 @@ orch2 "your prompt here"
 
 ### One‑shot prompt
 ```bash
-node bin/orchestrate "summarize this repo"
+orch2 "summarize this repo"
 ```
 
 ### Select a specific target
 ```bash
-node bin/orchestrate --target opencode "analyze auth flow"
+orch2 --target opencode "analyze auth flow"
 ```
 
 ### Prompt from file (multi‑line)
 ```bash
-node bin/orchestrate --prompt-file ./prompt.txt
+orch2 --prompt-file ./prompt.txt
 ```
 
 ### List configured targets
 ```bash
-node bin/orchestrate --list-targets
+orch2 --list-targets
 ```
 
 ## Configuration
@@ -91,12 +87,12 @@ Create `~/.orchestrate/config.json`:
 
 ### Route to oh-my-codex
 ```bash
-node bin/orchestrate --target codex "plan the refactor"
+orch2 --target codex "plan the refactor"
 ```
 
 ### Route to free-code with OpenAI provider
 ```bash
-CLAUDE_CODE_USE_OPENAI=1 node bin/orchestrate --target claude "explain this test"
+CLAUDE_CODE_USE_OPENAI=1 orch2 --target claude "explain this test"
 ```
 
 ## Error Handling
