@@ -49,6 +49,7 @@ Add a `setup` subcommand and a shared setup flow that can be invoked either expl
   }
 }
 ```
+- `args` is optional; if present it must be an array of strings.
 
 ## Validation (used to trigger setup)
 - Missing file or unreadable file
@@ -65,10 +66,15 @@ User runs `orch2 setup` → setup flow directly.
 
 ## Error Handling
 - No CLIs detected → prompt for custom command or exit
-- Write failure → show error and path
+- Write failure → show error and path, allow retry
 - User cancels → exit cleanly
+- Non-interactive (no TTY) → print message and exit with non-zero
+
+## Merge Rules
+- If a custom command uses the same target name as a detected target, prompt to confirm override.
 
 ## Testing Strategy
 - Unit tests: detection + config writer + validation rules
 - CLI tests: missing/invalid config triggers setup (stubbed prompts)
 - Prompt flow tests: no CLIs detected, custom command entry, user cancel
+- Default selection when only one target exists
