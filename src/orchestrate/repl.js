@@ -5,12 +5,14 @@ import { routePrompt } from "./router.js";
 
 const HELP = `Commands:
   /help            Show this help
+  /palette         Command palette
   /exit            Exit REPL
   /setup           Run interactive setup
   /list            List configured targets
   /config          Show config path and current default
   /target <name>   Set active target
   /history         Show recent prompts
+  /panel           Toggle status panel
   /clear           Clear screen
 `;
 
@@ -28,6 +30,7 @@ export async function runRepl({
   const history = [];
   const context = createContextManager({ historySize: 10 });
   let activeTarget = null;
+  let showPanel = true;
 
   const ensureConfig = async () => {
     let cfg;
@@ -48,6 +51,12 @@ export async function runRepl({
     activeTarget = cfg.default_target;
 
     output.write("\u001b[36morch2 REPL\u001b[0m \u001b[90m(opencode-style)\u001b[0m. Type /help for commands.\n\n");
+    if (showPanel) {
+      output.write("\u001b[90m┌─ Status ──────────────────────────────┐\n");
+      output.write(`\u001b[90m│ Target: ${activeTarget.padEnd(28)}│\n`);
+      output.write("\u001b[90m│ Router: OPENAI_API_KEY                │\n");
+      output.write("\u001b[90m└────────────────────────────────────────┘\u001b[0m\n\n");
+    }
 
     while (true) {
       const buffer = [];
@@ -78,6 +87,10 @@ export async function runRepl({
         const [cmd, ...args] = text.trim().split(/\s+/);
         if (cmd === "/help") {
           output.write(HELP);
+          continue;
+        }
+        if (cmd === "/palette") {
+          output.write("Commands: /help /exit /setup /list /config /target /history /panel /clear\n");
           continue;
         }
         if (cmd === "/exit") {
@@ -112,6 +125,11 @@ export async function runRepl({
         }
         if (cmd === "/history") {
           output.write(history.join("\n\n") + "\n");
+          continue;
+        }
+        if (cmd === "/panel") {
+          showPanel = !showPanel;
+          output.write(showPanel ? "Panel: on\n" : "Panel: off\n");
           continue;
         }
         if (cmd === "/clear") {
