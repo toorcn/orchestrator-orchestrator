@@ -48,16 +48,26 @@ export async function runRepl({
 
     while (true) {
       const buffer = [];
-      while (true) {
-        const line = await rl.question("> ");
-        if (line.trim() === "") break;
-        if (buffer.length === 0 && line.trim().startsWith("/")) {
-          buffer.push(line.trim());
-          break;
-        }
-        buffer.push(line);
+      let multiline = false;
+      const first = await rl.question("> ");
+      if (first.trim() === "") continue;
+      if (first.trim().startsWith("/")) {
+        buffer.push(first.trim());
+      } else if (first.trim().endsWith("\\")) {
+        multiline = true;
+        buffer.push(first.replace(/\\$/, ""));
+      } else {
+        buffer.push(first);
       }
-      if (buffer.length === 0) continue;
+
+      if (multiline) {
+        while (true) {
+          const line = await rl.question("> ");
+          if (line.trim() === "") break;
+          buffer.push(line);
+        }
+      }
+
       const text = buffer.join("\n");
 
       if (text.startsWith("/")) {

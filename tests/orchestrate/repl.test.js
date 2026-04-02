@@ -13,7 +13,7 @@ const fakeRun = async () => ({ exitCode: 0 });
 // Minimal test that REPL exits on /exit
 
 test("repl exits on /exit", async () => {
-  const inputs = ["/exit", ""]; // command + blank line submit
+  const inputs = ["/exit"]; // single-line command
   let idx = 0;
   const mockRl = {
     question: async () => inputs[idx++],
