@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { isConfigValid, loadConfig } from "../../src/orchestrate/config.js";
+import { detectTargets, writeConfig } from "../../src/orchestrate/setup.js";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -29,4 +30,32 @@ test("loadConfig throws on parse error", () => {
   const bad = path.join(tmp, "bad.json");
   fs.writeFileSync(bad, "{not-json}");
   assert.throws(() => loadConfig({ configPath: bad }));
+});
+
+// fake PATH detection via injected resolver
+
+test("detectTargets returns known targets", () => {
+  const targets = detectTargets({
+    which: (cmd) => (cmd === "oh-my-opencode" ? "/usr/bin/oh-my-opencode" : null),
+  });
+  assert.ok(targets.find((t) => t.name === "opencode"));
+});
+
+test("writeConfig writes file", () => {
+  const cfgPath = path.join(tmp, "config.json");
+  writeConfig(cfgPath, {
+    default_target: "opencode",
+    targets: { opencode: { command: "oh-my-opencode" } },
+  });
+  const raw = fs.readFileSync(cfgPath, "utf8");
+  assert.ok(raw.includes("default_target"));
+});
+
+test("writeConfig throws on write failure", () => {
+  assert.throws(() =>
+    writeConfig("/root/forbidden.json", {
+      default_target: "opencode",
+      targets: { opencode: { command: "oh-my-opencode" } },
+    }),
+  );
 });
