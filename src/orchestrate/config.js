@@ -24,5 +24,6 @@ export function loadConfig({ configPath } = {}) {
       throw new Error("Invalid config");
     }
   }
+  if (!cfg.targets[cfg.default_target]) throw new Error("Invalid config");
   return cfg;
 }

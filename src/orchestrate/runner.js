@@ -21,7 +21,10 @@ export function runTarget({ command, args = [], prompt, stdinPath }) {
       });
       stream.pipe(child.stdin);
     }
-    child.on("close", (code) => finish({ exitCode: code ?? 0 }));
+    child.on("close", (code, signal) => {
+      if (code === null) return finish({ exitCode: 1, error: "signal-terminated" });
+      return finish({ exitCode: code });
+    });
     child.on("error", () => finish({ exitCode: 1, error: "spawn-failed" }));
   });
 }
