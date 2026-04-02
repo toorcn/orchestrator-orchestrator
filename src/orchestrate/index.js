@@ -1,6 +1,10 @@
 import { loadConfig } from "./config.js";
 import { runTarget } from "./runner.js";
 
+const CONFIG_HINT = `Missing or invalid config. Create ~/.orchestrate/config.json with default_target and targets. Example:\n{\n  "default_target": "opencode",\n  "targets": {\n    "opencode": {"command": "oh-my-opencode"}\n  }\n}\n`;
+const MISSING_BINARY_HINT = (command) =>
+  `Missing CLI binary: ${command}. Install it or update your config.`;
+
 export async function main(argv) {
   const args = argv.slice(2);
   const list = args.includes("--list-targets");
@@ -19,14 +23,27 @@ export async function main(argv) {
   );
   const prompt = nonFlagArgs[0] || "";
 
-  const cfg = loadConfig({ configPath });
+  let cfg;
+  try {
+    cfg = loadConfig({ configPath });
+  } catch (err) {
+    console.error(CONFIG_HINT);
+    return 1;
+  }
+
   if (list) {
     console.log(Object.keys(cfg.targets).join("\n"));
     return 0;
   }
+
   const selected = target ?? cfg.default_target;
   const t = cfg.targets[selected];
-  if (!t) throw new Error("Unknown target");
+  if (!t) {
+    console.error(
+      `Unknown target: ${selected}. Available: ${Object.keys(cfg.targets).join(", ")}`
+    );
+    return 1;
+  }
 
   const result = await runTarget({
     command: t.command,
@@ -34,5 +51,11 @@ export async function main(argv) {
     prompt,
     stdinPath: promptFile,
   });
+
+  if (result.error === "spawn-failed") {
+    console.error(MISSING_BINARY_HINT(t.command));
+    return 1;
+  }
+
   return result.exitCode;
 }
