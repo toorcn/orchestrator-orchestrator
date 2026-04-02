@@ -12,7 +12,7 @@ before(() => fs.mkdirSync(tmp, { recursive: true }));
 test("valid config passes", () => {
   const ok = isConfigValid({
     default_target: "opencode",
-    targets: { opencode: { command: "oh-my-opencode" } },
+    targets: { opencode: { command: "opencode" } },
   });
   assert.equal(ok, true);
 });
@@ -36,7 +36,7 @@ test("loadConfig throws on parse error", () => {
 
 test("detectTargets returns known targets", () => {
   const targets = detectTargets({
-    which: (cmd) => (cmd === "oh-my-opencode" ? "/usr/bin/oh-my-opencode" : null),
+    which: (cmd) => (cmd === "opencode" ? "/usr/bin/opencode" : null),
   });
   assert.ok(targets.find((t) => t.name === "opencode"));
 });
@@ -45,7 +45,7 @@ test("writeConfig writes file", () => {
   const cfgPath = path.join(tmp, "config.json");
   writeConfig(cfgPath, {
     default_target: "opencode",
-    targets: { opencode: { command: "oh-my-opencode" } },
+    targets: { opencode: { command: "opencode" } },
   });
   const raw = fs.readFileSync(cfgPath, "utf8");
   assert.ok(raw.includes("default_target"));
@@ -56,7 +56,7 @@ test("writeConfig throws on write failure", () => {
   assert.throws(() =>
     writeConfig(forbidden, {
       default_target: "opencode",
-      targets: { opencode: { command: "oh-my-opencode" } },
+      targets: { opencode: { command: "opencode" } },
     }),
   );
 });

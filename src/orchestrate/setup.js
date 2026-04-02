@@ -6,8 +6,8 @@ import { stdin as input, stdout as output } from "node:process";
 import { resolveConfigPath } from "./config.js";
 
 const KNOWN = [
-  { name: "opencode", command: "oh-my-opencode" },
-  { name: "codex", command: "oh-my-codex" },
+  { name: "opencode", command: "opencode" },
+  { name: "codex", command: "codex" },
   { name: "claude", command: "free-code" },
 ];
 
