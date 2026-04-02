@@ -28,13 +28,36 @@ Add a `setup` subcommand and a shared setup flow that can be invoked either expl
    - Checks for known CLIs on PATH (e.g., `oh-my-opencode`, `oh-my-codex`, `free-code`)
 
 3. **Prompt Flow**
-   - Multi-select: which targets to include
-   - Single-select: default target
-   - Optional: custom command entries if none detected
+   - Multi-select: which targets to include (must select at least one)
+   - Single-select: default target (must be one of selected)
+   - If none detected, prompt user to enter at least one custom command (name + command)
 
 4. **Config Writer**
+   - Ensures `~/.orchestrate/` exists
    - Writes JSON config
    - Confirms path on success
+
+## Config Format
+```json
+{
+  "default_target": "<name>",
+  "targets": {
+    "<name>": {
+      "command": "<binary>",
+      "args": ["<optional>", "<args>"]
+    }
+  }
+}
+```
+
+## Validation (used to trigger setup)
+- Missing file or unreadable file
+- JSON parse error
+- `default_target` missing or not string
+- `targets` missing or not object
+- No targets defined
+- Any target missing a non-empty `command`
+- `default_target` not present in `targets`
 
 ## Data Flow
 User runs `orch2` → config missing/invalid → setup flow → detect targets → prompt user → write config → proceed.
@@ -46,5 +69,6 @@ User runs `orch2 setup` → setup flow directly.
 - User cancels → exit cleanly
 
 ## Testing Strategy
-- Unit tests: detection + config writer
-- CLI tests: missing config triggers setup (stubbed prompts)
+- Unit tests: detection + config writer + validation rules
+- CLI tests: missing/invalid config triggers setup (stubbed prompts)
+- Prompt flow tests: no CLIs detected, custom command entry, user cancel
