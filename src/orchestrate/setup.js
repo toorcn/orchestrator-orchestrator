@@ -48,15 +48,18 @@ export async function setup({ interactive, configPath } = {}) {
 
     if (!detected || detected.length === 0) {
       output.write("No supported CLIs detected on PATH.\n");
-      customName = (await rl.question("Enter a target name: ")).trim();
-      customCommand = (await rl.question("Enter command for this target: ")).trim();
+      customName = (await rl.question("Enter a target name (or 'q' to cancel): ")).trim();
+      if (customName.toLowerCase() === "q") return 1;
+      customCommand = (await rl.question("Enter command for this target (or 'q' to cancel): ")).trim();
+      if (customCommand.toLowerCase() === "q") return 1;
       if (!customName || !customCommand) return 1;
       selected = [customName];
       defaultTarget = customName;
     } else {
-      output.write("Select targets to include (comma-separated numbers):\n");
+      output.write("Select targets to include (comma-separated numbers, or 'q' to cancel):\n");
       detected.forEach((t, i) => output.write(`  ${i + 1}) ${t.name} (${t.command})\n`));
       const raw = (await rl.question("Targets: ")).trim();
+      if (raw.toLowerCase() === "q") return 1;
       const indices = raw
         .split(",")
         .map((s) => parseInt(s.trim(), 10) - 1)
@@ -67,9 +70,11 @@ export async function setup({ interactive, configPath } = {}) {
       if (selected.length === 1) {
         defaultTarget = selected[0];
       } else {
-        output.write("Choose a default target:\n");
+        output.write("Choose a default target (or 'q' to cancel):\n");
         selected.forEach((name, i) => output.write(`  ${i + 1}) ${name}\n`));
-        const d = parseInt((await rl.question("Default: ")).trim(), 10) - 1;
+        const rawDefault = (await rl.question("Default: ")).trim();
+        if (rawDefault.toLowerCase() === "q") return 1;
+        const d = parseInt(rawDefault, 10) - 1;
         if (!Number.isInteger(d) || d < 0 || d >= selected.length) return 1;
         defaultTarget = selected[d];
       }
@@ -85,6 +90,11 @@ export async function setup({ interactive, configPath } = {}) {
 
     const targets = {};
     if (customName) {
+      const collision = detected.find((d) => d.name === customName);
+      if (collision) {
+        const overwrite = (await rl.question("Name exists. Override? (y/n): ")).trim().toLowerCase();
+        if (overwrite !== "y") return 1;
+      }
       targets[customName] = { command: customCommand };
     } else {
       for (const name of selected) {
@@ -94,11 +104,15 @@ export async function setup({ interactive, configPath } = {}) {
       }
     }
 
-    try {
-      writeConfig(pathChoice, { default_target: defaultTarget, targets });
-    } catch (err) {
-      output.write("Write failed. Try again.\n");
-      return 1;
+    while (true) {
+      try {
+        writeConfig(pathChoice, { default_target: defaultTarget, targets });
+        break;
+      } catch (err) {
+        output.write("Write failed. Retry? (y/n): ");
+        const retry = (await rl.question("")).trim().toLowerCase();
+        if (retry !== "y") return 1;
+      }
     }
 
     output.write("Setup complete. Try: orch2 --list-targets\n");
