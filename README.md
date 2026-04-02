@@ -4,18 +4,28 @@ A single local CLI wrapper that routes prompts to installed orchestrator CLIs (o
 
 ## Quick Install
 
-This repo ships a local CLI script you can run via Node:
-
-```bash
-orch2 "your prompt here"
-```
+This repo ships a local CLI script you can run via Node. To use `orch2`, you need two things:
+1) a symlink to the CLI
+2) a config file
 
 ### Short command name (orch2)
 
-Create a symlink so you can run `orch2` directly:
-
 ```bash
 sudo ln -s "$(pwd)/bin/orchestrate" /usr/local/bin/orch2
+```
+
+### Minimal config
+
+```bash
+mkdir -p ~/.orchestrate
+cat <<'EOF' > ~/.orchestrate/config.json
+{
+  "default_target": "opencode",
+  "targets": {
+    "opencode": {"command": "oh-my-opencode"}
+  }
+}
+EOF
 ```
 
 Then use:
@@ -33,7 +43,16 @@ orch2 "your prompt here"
 ```bash
 git clone https://github.com/toorcn/orchestrator-orchestrator.git
 cd orchestrator-orchestrator
-# no build step required
+sudo ln -s "$(pwd)/bin/orchestrate" /usr/local/bin/orch2
+mkdir -p ~/.orchestrate
+cat <<'EOF' > ~/.orchestrate/config.json
+{
+  "default_target": "opencode",
+  "targets": {
+    "opencode": {"command": "oh-my-opencode"}
+  }
+}
+EOF
 orch2 "your prompt here"
 ```
 
