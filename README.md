@@ -10,6 +10,24 @@ This repo ships a local CLI script you can run via Node:
 node bin/orchestrate "your prompt here"
 ```
 
+### Short command name (orch2)
+
+Create a small wrapper so you can run `orch2` instead of `node bin/orchestrate`:
+
+```bash
+cat <<'EOF' > /usr/local/bin/orch2
+#!/usr/bin/env bash
+node "$(pwd)/bin/orchestrate" "$@"
+EOF
+chmod +x /usr/local/bin/orch2
+```
+
+Then use:
+
+```bash
+orch2 "your prompt here"
+```
+
 ## Requirements
 - Node.js 20+ (tested with Node 22)
 - Target CLIs installed locally (e.g., `oh-my-opencode`, `oh-my-codex`, `free-code`)
