@@ -47,11 +47,12 @@ export async function runRepl({
     if (typeof cfg === "number") return cfg;
     activeTarget = cfg.default_target;
 
-    output.write("orch2 REPL. Type /help for commands.\n\n");
+    output.write("\u001b[36morch2 REPL\u001b[0m. Type /help for commands.\n\n");
 
     while (true) {
       const buffer = [];
       let multiline = false;
+      output.write(`\u001b[90m[Target: ${activeTarget}]\u001b[0m\n`);
       const first = await rl.question("> ");
       if (first.trim() === "") continue;
       if (first.trim().startsWith("/")) {
